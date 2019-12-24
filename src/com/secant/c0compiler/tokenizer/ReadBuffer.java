@@ -22,7 +22,12 @@ public class ReadBuffer {
 
     public char read() throws CompilationError {
         try {
-            return (char) pushbackReader.read();
+            int result = pushbackReader.read();
+            if (result != -1) {
+                return (char) result;
+            } else {
+                return '\0';
+            }
         } catch (IOException e) {
             throw new CompilationError(Tokenizer.line, Tokenizer.row, ErrorCode.FILE_READ_ERROR);
         }

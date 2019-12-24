@@ -198,6 +198,9 @@ public class Tokenizer {
         } else if (currentChar == ';') {
             row++;
             return new Token(SEMICOLON, null);
+        } else if (currentChar == '\0') {
+            readBuffer.close();
+            return null;
         } else {
             throw new CompilationError(line, row, UNKNOWN_CHARACTER);
         }
