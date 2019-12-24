@@ -1,6 +1,8 @@
 package com.secant.c0compiler.analyser;
 
 import com.secant.c0compiler.errorhandling.CompilationError;
+import com.secant.c0compiler.symbols.SymbolTable;
+import com.secant.c0compiler.symbols.SymbolTableStack;
 import com.secant.c0compiler.tokenizer.Token;
 
 import static com.secant.c0compiler.analyser.TokenBuffer.*;
@@ -9,6 +11,11 @@ import static com.secant.c0compiler.errorhandling.ErrorCode.*;
 import static com.secant.c0compiler.tokenizer.Tokenizer.*;
 
 public class Analyser {
+    private static SymbolTable constantTable = new SymbolTable();
+    private static SymbolTable globalVariableTable = new SymbolTable();
+    private static SymbolTable functionTable = new SymbolTable();
+    private static SymbolTableStack symbolTableStack = new SymbolTableStack();
+
     private static Token currentToken;
 
     private static void getToken() {

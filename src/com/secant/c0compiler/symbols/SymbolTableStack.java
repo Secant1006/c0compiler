@@ -1,14 +1,18 @@
 package com.secant.c0compiler.symbols;
 
-import java.util.Iterator;
 import java.util.Stack;
 
 public class SymbolTableStack {
     private static Stack<SymbolTable> stack = new Stack<>();
-    private static Iterator<SymbolTable> iterator;
+    private static int currentIndex;
 
     public static SymbolTable newTable() {
-        SymbolTable table = new SymbolTable();
+        if (!stack.empty()) {
+            currentIndex = stack.peek().getCurrentIndex();
+        } else {
+            currentIndex = 0;
+        }
+        SymbolTable table = new SymbolTable(currentIndex);
         stack.push(table);
         return table;
     }
@@ -17,11 +21,13 @@ public class SymbolTableStack {
         stack.pop();
     }
 
-    public static void setIterator() {
-        iterator = stack.iterator();
-    }
-
-    public static SymbolTable getNextTable() {
-        return iterator.next();
+    public static Symbol getSymbolByName(String name) {
+        for (SymbolTable table : stack) {
+            Symbol result = table.getSymbolByName(name);
+            if (result != null) {
+                return result;
+            }
+        }
+        return null;
     }
 }
