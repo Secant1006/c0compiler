@@ -200,7 +200,7 @@ public class Tokenizer {
             return new Token(SEMICOLON, null);
         } else if (currentChar == '\0') {
             readBuffer.close();
-            return null;
+            return new Token(NULL, null);
         } else {
             throw new CompilationError(line, row, UNKNOWN_CHARACTER);
         }

@@ -1,6 +1,7 @@
 package com.secant.c0compiler.tokenizer;
 
 public enum TokenType {
+    NULL,
     INTEGER,
     IDENTIFIER,
     RESERVED_WORD_CONST,
