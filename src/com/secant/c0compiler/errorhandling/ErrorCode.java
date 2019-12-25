@@ -20,6 +20,9 @@ public enum ErrorCode {
     NO_RIGHT_BRACKET("No right bracket."),
     INVALID_ASSIGNMENT_EXPRESSION("No assignment operator."),
     INVALID_EXPRESSION("The expression is invalid."),
+    INVALID_VARIABLE_DEFINITION("Variable type cannot be 'void'."),
+    VARIABLE_HAS_BEEN_DECLARED("Variable has been declared."),
+    FUNCTION_HAS_BEEN_DEFINED("Function has been defined."),
     ;
 
     private final String description;

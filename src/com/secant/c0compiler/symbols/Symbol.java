@@ -7,6 +7,13 @@ public class Symbol {
     Object value;
     boolean constant;
 
+    public Symbol(String name, SymbolType type) {
+        this.name = name;
+        this.type = type;
+        this.value = 0;
+        this.constant = false;
+    }
+
     public Symbol(String name, SymbolType type, Object value) {
         this.name = name;
         this.type = type;

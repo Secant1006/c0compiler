@@ -1,20 +1,23 @@
 package com.secant.c0compiler.analyser;
 
+import com.secant.c0compiler.assembly.Instruction;
 import com.secant.c0compiler.errorhandling.CompilationError;
+import com.secant.c0compiler.symbols.Symbol;
 import com.secant.c0compiler.symbols.SymbolTable;
 import com.secant.c0compiler.symbols.SymbolTableStack;
 import com.secant.c0compiler.tokenizer.Token;
 
 import static com.secant.c0compiler.analyser.TokenBuffer.*;
+import static com.secant.c0compiler.assembly.OPCode.*;
+import static com.secant.c0compiler.assembly.WriteOutput.*;
+import static com.secant.c0compiler.symbols.SymbolType.*;
 import static com.secant.c0compiler.tokenizer.TokenType.*;
 import static com.secant.c0compiler.errorhandling.ErrorCode.*;
 import static com.secant.c0compiler.tokenizer.Tokenizer.*;
 
 public class Analyser {
     private static SymbolTable constantTable = new SymbolTable();
-    private static SymbolTable globalVariableTable = new SymbolTable();
     private static SymbolTable functionTable = new SymbolTable();
-    private static SymbolTableStack symbolTableStack = new SymbolTableStack();
 
     private static Token currentToken;
 
@@ -32,6 +35,7 @@ public class Analyser {
     }
 
     private static void analyseC0Program() throws CompilationError {
+        SymbolTableStack.newTable();
         if (currentToken.getType() == RESERVED_WORD_CONST) {
             analyseConstVariableDeclaration();
         } else if (currentToken.getType() == RESERVED_WORD_VOID || currentToken.getType() == RESERVED_WORD_INT) {
@@ -39,6 +43,7 @@ public class Analyser {
         } else {
             throw new CompilationError(line, row, NO_TYPE_SPECIFIER);
         }
+        // 执行WriteOutput的完成方法
     }
 
     private static void analyseConstVariableDeclaration() throws CompilationError {
@@ -92,20 +97,29 @@ public class Analyser {
         identifier = currentToken;
         getToken();
         if (currentToken.getType() == ASSIGNMENT) {
+            if (typeSpecifier.getType() == RESERVED_WORD_VOID) {
+                throw new CompilationError(line, row, INVALID_VARIABLE_DEFINITION);
+            }
             if (!variableDeclarationFinished) {
                 analyseVariableDeclaration();
             } else {
                 throw new CompilationError(line, row, VARIABLE_DECLARATION_AFTER_FUNCTION_DEFINITION);
             }
         } else if (currentToken.getType() == COMMA) {
-            // 加符号表，初值0
             if (!variableDeclarationFinished) {
                 analyseVariableDeclaration();
             } else {
                 throw new CompilationError(line, row, VARIABLE_DECLARATION_AFTER_FUNCTION_DEFINITION);
             }
         } else if (currentToken.getType() == SEMICOLON) {
-            // 加符号表，初值0
+            if (typeSpecifier.getType() == RESERVED_WORD_VOID) {
+                throw new CompilationError(line, row, INVALID_VARIABLE_DEFINITION);
+            }
+            if (SymbolTableStack.getSymbolByName(identifier.getValue().toString()) != null) {
+                throw new CompilationError(line, row, VARIABLE_HAS_BEEN_DECLARED);
+            }
+            SymbolTableStack.addSymbol(new Symbol(identifier.getValue().toString(), SYM_INTEGER, 0));
+            writeInstruction(new Instruction(IPUSH, 0));
         } else if (currentToken.getType() == LEFT_BRACKET) {
             variableDeclarationFinished = true;
             analyseFunctionDefinition();
@@ -116,18 +130,28 @@ public class Analyser {
 
     private static void analyseVariableDeclaration() throws CompilationError {
         if (currentToken.getType() == ASSIGNMENT) {
-            getToken();
+            if (SymbolTableStack.getSymbolByName(identifier.getValue().toString()) != null) {
+                throw new CompilationError(line, row, VARIABLE_HAS_BEEN_DECLARED);
+            }
+            SymbolTableStack.addSymbol(new Symbol(identifier.getValue().toString(), SYM_INTEGER, 0));
             analyseExpression();
         } else {
+            if (SymbolTableStack.getSymbolByName(identifier.getValue().toString()) != null) {
+                throw new CompilationError(line, row, VARIABLE_HAS_BEEN_DECLARED);
+            }
+            SymbolTableStack.addSymbol(new Symbol(identifier.getValue().toString(), SYM_INTEGER, 0));
+            writeInstruction(new Instruction(IPUSH, 0));
             while (true) {
                 getToken();
                 if (currentToken.getType() != IDENTIFIER) {
                     throw new CompilationError(line, row, NO_IDENTIFIER);
                 }
+                SymbolTableStack.addSymbol(new Symbol(identifier.getValue().toString(), SYM_INTEGER, 0));
                 getToken();
                 if (currentToken.getType() == ASSIGNMENT) {
-                    getToken();
                     analyseExpression();
+                } else {
+                    writeInstruction(new Instruction(IPUSH, 0));
                 }
                 getToken();
                 if (currentToken.getType() != COMMA) {
@@ -142,54 +166,62 @@ public class Analyser {
         }
     }
 
-    private static void analyseFunctionDefinition() {
-        getToken();
-        if (currentToken.getType() != RIGHT_BRACKET) {
-            unreadToken();
-            analyseParameterDeclaration();
-        }
+    private static void analyseFunctionDefinition() throws CompilationError {
+        SymbolTableStack.newTable();
+        analyseParameterDeclaration();
         analyseCompoundStatement();
+        SymbolTableStack.finishTable();
     }
 
     private static void analyseParameterDeclaration() throws CompilationError {
+        getToken();
+        if (currentToken.getType() == RIGHT_BRACKET) {
+            if (functionTable.getSymbolByName(identifier.getValue().toString()) != null) {
+                throw new CompilationError(line, row, FUNCTION_HAS_BEEN_DEFINED);
+            }
+            functionTable.addSymbol(new Symbol(identifier.getValue().toString(), SYM_FUNCTION, 0));
+            return;
+        }
         boolean isConstant = false;
+        int paramSize = 0;
         getToken();
         if (currentToken.getType() == RESERVED_WORD_CONST) {
             isConstant = true;
-        } else {
-            unreadToken();
+            getToken();
         }
-        getToken();
-        if (currentToken.getType() == RESERVED_WORD_INT) {
-            typeSpecifier = currentToken;
-        } else {
+        if (currentToken.getType() != RESERVED_WORD_INT) {
             throw new CompilationError(line, row, INVALID_PARAMETER);
         }
         getToken();
         if (currentToken.getType() != IDENTIFIER) {
             throw new CompilationError(line, row, NO_IDENTIFIER);
-        } else {
-            identifier = currentToken;
         }
+        paramSize += 4;
+        SymbolTableStack.addSymbol(new Symbol(currentToken.getValue().toString(), SYM_INTEGER, 0, isConstant));
+        isConstant = false;
         while (true) {
             getToken();
             if (currentToken.getType() == RIGHT_BRACKET) {
                 break;
             } else if (currentToken.getType() == COMMA) {
                 getToken();
-                if (currentToken.getType() == RESERVED_WORD_INT) {
-                    typeSpecifier = currentToken;
-                } else {
+                if (currentToken.getType() == RESERVED_WORD_CONST) {
+                    isConstant = true;
+                    getToken();
+                }
+                if (currentToken.getType() != RESERVED_WORD_INT) {
                     throw new CompilationError(line, row, INVALID_PARAMETER);
                 }
                 getToken();
                 if (currentToken.getType() != IDENTIFIER) {
                     throw new CompilationError(line, row, NO_IDENTIFIER);
-                } else {
-                    identifier = currentToken;
                 }
+                paramSize += 4;
+                SymbolTableStack.addSymbol(new Symbol(currentToken.getValue().toString(), SYM_INTEGER, 0, isConstant));
+                isConstant = false;
             }
         }
+        functionTable.addSymbol(new Symbol(identifier.getValue().toString(), SYM_FUNCTION, paramSize));
     }
 
     private static void analyseCompoundStatement() throws CompilationError {
@@ -214,6 +246,10 @@ public class Analyser {
             }
         }
         analyseStatementSequence();
+        getToken();
+        if (currentToken.getType() != RIGHT_BRACE) {
+            throw new CompilationError(line, row, NO_RIGHT_BRACE);
+        }
     }
 
     private static void analyseStatementSequence() {

@@ -10,10 +10,11 @@ import static com.secant.c0compiler.errorhandling.ErrorCode.*;
 
 public class WriteOutput {
     private static int mode;
-    private RandomAccessFile writer;
-    private int currentIndex;
+    private static RandomAccessFile writer;
+    private static int currentIndex;
+    private static int state;
 
-    public void initializeWriter() throws CompilationError {
+    public static void initializeWriter() throws CompilationError {
         mode = getMode();
         try {
             if (!new File(getOutputFileName()).createNewFile()) {
@@ -26,7 +27,7 @@ public class WriteOutput {
         }
     }
 
-    public void closeWriter() throws CompilationError {
+    public static void closeWriter() throws CompilationError {
         try {
             writer.close();
         } catch (IOException e) {
@@ -34,18 +35,18 @@ public class WriteOutput {
         }
     }
 
-    private void writeHeader() throws IOException {
+    private static void writeHeader() throws IOException {
         if (mode == 1) {
             writer.writeInt(0x43303a29);
             writer.writeInt(0x00000001);
         }
     }
 
-    private void resetIndex() {
+    private static void resetIndex() {
         currentIndex = 0;
     }
 
-    public void writeInstruction(Instruction instruction) throws CompilationError {
+    public static void writeInstruction(Instruction instruction) throws CompilationError {
         if (mode == 0) {
             String str;
             if (instruction.getOpCode().getOperandType() == NULL) {

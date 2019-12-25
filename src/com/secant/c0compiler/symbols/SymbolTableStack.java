@@ -1,18 +1,14 @@
 package com.secant.c0compiler.symbols;
 
+import javafx.util.Pair;
+
 import java.util.Stack;
 
 public class SymbolTableStack {
     private static Stack<SymbolTable> stack = new Stack<>();
-    private static int currentIndex;
 
     public static SymbolTable newTable() {
-        if (!stack.empty()) {
-            currentIndex = stack.peek().getCurrentIndex();
-        } else {
-            currentIndex = 0;
-        }
-        SymbolTable table = new SymbolTable(currentIndex);
+        SymbolTable table = new SymbolTable();
         stack.push(table);
         return table;
     }
@@ -21,13 +17,19 @@ public class SymbolTableStack {
         stack.pop();
     }
 
-    public static Symbol getSymbolByName(String name) {
+    public static Pair<Symbol, Integer> getSymbolByName(String name) {
+        int diff_level = 0;
         for (SymbolTable table : stack) {
+            diff_level++;
             Symbol result = table.getSymbolByName(name);
             if (result != null) {
-                return result;
+                return new Pair<>(result, diff_level);
             }
         }
         return null;
+    }
+
+    public static void addSymbol(Symbol symbol) {
+        stack.peek().addSymbol(symbol);
     }
 }

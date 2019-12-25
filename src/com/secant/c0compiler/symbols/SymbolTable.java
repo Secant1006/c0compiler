@@ -11,11 +11,6 @@ public class SymbolTable {
         currentIndex = 0;
     }
 
-    public SymbolTable(int currentIndex) {
-        table = new ArrayList<>();
-        this.currentIndex = currentIndex;
-    }
-
     public Symbol getSymbolByName(String name) {
         for (Symbol result : table) {
             if (result.getName().equals(name)) {
