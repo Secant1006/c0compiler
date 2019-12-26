@@ -2,3 +2,5 @@
 BUAA SE Compiling - C0 (2019)
 
 Coded in Java.
+
+Build: use make.sh.
