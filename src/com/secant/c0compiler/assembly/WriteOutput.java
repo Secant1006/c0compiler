@@ -16,7 +16,7 @@ public class WriteOutput {
     private static int mode;
     private static boolean writeToStdio;
     private static RandomAccessFile writer;
-    private static ArrayList<ArrayList<Instruction>> programList;
+    private static ArrayList<ArrayList<Instruction>> programList = new ArrayList<>();
     private static ArrayList<Instruction> instructionList;
 
     public static void addProgram() {
