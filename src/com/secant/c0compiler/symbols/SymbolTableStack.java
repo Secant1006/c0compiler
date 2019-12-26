@@ -18,13 +18,14 @@ public class SymbolTableStack {
     }
 
     public static Pair<Symbol, Integer> getSymbolByName(String name) {
-        int diff_level = 0;
+        int index = 0;
         for (SymbolTable table : stack) {
             Symbol result = table.getSymbolByName(name);
             if (result != null) {
+                int diff_level = stack.size() - index - 1;
                 return new Pair<>(result, diff_level);
             }
-            diff_level++;
+            index++;
         }
         return null;
     }

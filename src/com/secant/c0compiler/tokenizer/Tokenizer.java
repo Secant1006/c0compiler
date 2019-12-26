@@ -86,6 +86,7 @@ public class Tokenizer {
             }
         } else if (isDigit(currentChar)) {
             row++;
+            currentToken += currentChar;
             if (currentChar == '0') {
                 read();
                 if (currentChar == 'x' || currentChar == 'X') {

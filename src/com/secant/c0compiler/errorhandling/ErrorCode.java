@@ -9,7 +9,7 @@ public enum ErrorCode {
     FILE_WRITE_ERROR("An error occurred when writing file."),
     NO_TYPE_SPECIFIER("No type specifier."),
     NO_IDENTIFIER("No identifier."),
-    INVALID_CONSTANT_DECLARATION("Variable cannot be declared without assignment."),
+    INVALID_CONSTANT_DECLARATION("Constant cannot be declared without assignment."),
     NO_SEMICOLON("No semicolon."),
     INVALID_PARAMETER("The parameter is invalid."),
     VARIABLE_DECLARATION_AFTER_FUNCTION_DEFINITION("Variable declaration can't be after function definition."),

@@ -31,21 +31,15 @@ public class WriteOutput {
     public static void initializeWriter() throws CompilationError {
         mode = getMode();
         writeToStdio = isWriteToStdio();
-        try {
-            if (!new File(getOutputFileName()).createNewFile()) {
+        if (!writeToStdio) {
+            try {
+                if (!new File(getOutputFileName()).createNewFile()) {
+                    throw new CompilationError(0, 0, FILE_WRITE_ERROR);
+                }
+                writer = new RandomAccessFile(getOutputFileName(), "rw");
+            } catch (Exception e) {
                 throw new CompilationError(0, 0, FILE_WRITE_ERROR);
             }
-            writer = new RandomAccessFile(getOutputFileName(), "rw");
-        } catch (Exception e) {
-            throw new CompilationError(0, 0, FILE_WRITE_ERROR);
-        }
-    }
-
-    public static void closeWriter() throws CompilationError {
-        try {
-            writer.close();
-        } catch (IOException e) {
-            throw new CompilationError(0, 0, FILE_WRITE_ERROR);
         }
     }
 
@@ -182,6 +176,13 @@ public class WriteOutput {
                     writer.writeShort((Integer) function.getValue());
                     writer.writeShort(1);
                     writer.writeShort(programList.get(index).size());
+                } else {
+                    str = String.format(".F%d:\n", index);
+                    if (!writeToStdio) {
+                        writer.writeChars(str);
+                    } else {
+                        System.out.print(str);
+                    }
                 }
                 int instructionIndex = 0;
                 for (Instruction instruction : programList.get(index)) {
@@ -193,6 +194,5 @@ public class WriteOutput {
         } catch (IOException e) {
             throw new CompilationError(0, 0, FILE_WRITE_ERROR);
         }
-        closeWriter();
     }
 }

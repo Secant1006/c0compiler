@@ -127,26 +127,26 @@ public class Analyser {
             analyseExpression();
         } else {
             writeInstruction(new Instruction(IPUSH, 0));
-        }
-        while (true) {
-            getToken();
-            if (currentToken.getType() != IDENTIFIER) {
-                throw new CompilationError(line, row, NO_IDENTIFIER);
-            }
-            if (SymbolTableStack.getSymbolByName(identifier.getValue().toString()) != null) {
-                throw new CompilationError(line, row, VARIABLE_HAS_BEEN_DECLARED);
-            }
-            SymbolTableStack.addSymbol(new Symbol(identifier.getValue().toString(), SYM_INTEGER, 0, isConstant));
-            getToken();
-            if (currentToken.getType() == ASSIGNMENT) {
-                analyseExpression();
-            } else {
-                writeInstruction(new Instruction(IPUSH, 0));
-            }
-            getToken();
-            if (currentToken.getType() != COMMA) {
-                unreadToken();
-                break;
+            while (true) {
+                getToken();
+                if (currentToken.getType() != IDENTIFIER) {
+                    throw new CompilationError(line, row, NO_IDENTIFIER);
+                }
+                if (SymbolTableStack.getSymbolByName(identifier.getValue().toString()) != null) {
+                    throw new CompilationError(line, row, VARIABLE_HAS_BEEN_DECLARED);
+                }
+                SymbolTableStack.addSymbol(new Symbol(identifier.getValue().toString(), SYM_INTEGER, 0, isConstant));
+                getToken();
+                if (currentToken.getType() == ASSIGNMENT) {
+                    analyseExpression();
+                } else {
+                    writeInstruction(new Instruction(IPUSH, 0));
+                }
+                getToken();
+                if (currentToken.getType() != COMMA) {
+                    unreadToken();
+                    break;
+                }
             }
         }
         getToken();
@@ -166,9 +166,10 @@ public class Analyser {
     }
 
     private static void analyseParameterDeclaration() throws CompilationError {
+        Token function = identifier;
         getToken();
         if (currentToken.getType() == RIGHT_BRACKET) {
-            if (functionTable.getSymbolByName(identifier.getValue().toString()) != null) {
+            if (functionTable.getSymbolByName(function.getValue().toString()) != null) {
                 throw new CompilationError(line, row, FUNCTION_HAS_BEEN_DEFINED);
             }
             if (typeSpecifier.getType() == RESERVED_WORD_INT) {
@@ -180,7 +181,6 @@ public class Analyser {
         }
         boolean isConstant = false;
         int paramSize = 0;
-        getToken();
         if (currentToken.getType() == RESERVED_WORD_CONST) {
             isConstant = true;
             getToken();
@@ -250,6 +250,7 @@ public class Analyser {
                     throw new CompilationError(line, row, NO_IDENTIFIER);
                 }
             } else {
+                unreadToken();
                 break;
             }
         }
@@ -298,6 +299,7 @@ public class Analyser {
             analyseScanStatement();
         } else if (currentToken.getType() == IDENTIFIER) {
             identifier = currentToken;
+            Token function = identifier;
             getToken();
             if (currentToken.getType() == ASSIGNMENT) {
                 try {
@@ -314,7 +316,7 @@ public class Analyser {
                     throw new CompilationError(line, row, VARIABLE_OR_FUNCTION_UNDEFINED);
                 }
             } else if (currentToken.getType() == LEFT_BRACKET) {
-                if (functionTable.getSymbolByName(identifier.getValue().toString()) == null) {
+                if (functionTable.getSymbolByName(function.getValue().toString()) == null) {
                     throw new CompilationError(line, row, VARIABLE_DECLARATION_AFTER_FUNCTION_DEFINITION);
                 }
                 analyseFunctionCall();
@@ -347,6 +349,7 @@ public class Analyser {
             throw new CompilationError(line, row, NO_LEFT_BRACKET);
         }
         Relation relation = analyseCondition();
+        getToken();
         if (currentToken.getType() != RIGHT_BRACKET) {
             throw new CompilationError(line, row, NO_RIGHT_BRACKET);
         }
@@ -356,22 +359,22 @@ public class Analyser {
         analyseStatement();
         switch (relation) {
             case CON_LESS_THAN:
-                setInstruction(offset, new Instruction(JL, getOffset()));
-                break;
-            case CON_LESS_OR_EQUAL:
-                setInstruction(offset, new Instruction(JLE, getOffset()));
-                break;
-            case CON_MORE_THAN:
-                setInstruction(offset, new Instruction(JG, getOffset()));
-                break;
-            case CON_MORE_OR_EQUAL:
                 setInstruction(offset, new Instruction(JGE, getOffset()));
                 break;
+            case CON_LESS_OR_EQUAL:
+                setInstruction(offset, new Instruction(JG, getOffset()));
+                break;
+            case CON_MORE_THAN:
+                setInstruction(offset, new Instruction(JLE, getOffset()));
+                break;
+            case CON_MORE_OR_EQUAL:
+                setInstruction(offset, new Instruction(JL, getOffset()));
+                break;
             case CON_NOT_EQUAL:
-                setInstruction(offset, new Instruction(JNE, getOffset()));
+                setInstruction(offset, new Instruction(JE, getOffset()));
                 break;
             case CON_EQUAL:
-                setInstruction(offset, new Instruction(JE, getOffset()));
+                setInstruction(offset, new Instruction(JNE, getOffset()));
                 break;
         }
         getToken();
@@ -412,32 +415,35 @@ public class Analyser {
         if (currentToken.getType() != LEFT_BRACKET) {
             throw new CompilationError(line, row, NO_LEFT_BRACKET);
         }
-        int offset = getOffset();
+        int offset_1 = getOffset();
         Relation relation = analyseCondition();
+        int offset_2 = getOffset();
+        writeInstruction(new Instruction(NOP));
         getToken();
         if (currentToken.getType() != RIGHT_BRACKET) {
             throw new CompilationError(line, row, NO_RIGHT_BRACKET);
         }
         getToken();
         analyseStatement();
+        writeInstruction(new Instruction(JMP, offset_1));
         switch (relation) {
             case CON_LESS_THAN:
-                writeInstruction(new Instruction(JL, offset));
+                setInstruction(offset_2, new Instruction(JGE, getOffset()));
                 break;
             case CON_LESS_OR_EQUAL:
-                writeInstruction(new Instruction(JLE, offset));
+                setInstruction(offset_2, new Instruction(JG, getOffset()));
                 break;
             case CON_MORE_THAN:
-                writeInstruction(new Instruction(JG, offset));
+                setInstruction(offset_2, new Instruction(JLE, getOffset()));
                 break;
             case CON_MORE_OR_EQUAL:
-                writeInstruction(new Instruction(JGE, offset));
+                setInstruction(offset_2, new Instruction(JL, getOffset()));
                 break;
             case CON_NOT_EQUAL:
-                writeInstruction(new Instruction(JNE, offset));
+                setInstruction(offset_2, new Instruction(JE, getOffset()));
                 break;
             case CON_EQUAL:
-                writeInstruction(new Instruction(JE, offset));
+                setInstruction(offset_2, new Instruction(JNE, getOffset()));
                 break;
         }
     }
@@ -522,6 +528,7 @@ public class Analyser {
                 break;
             } else {
                 writeInstruction(new Instruction(BIPUSH, 32));
+                writeInstruction(new Instruction(CPRINT));
                 analyseExpression();
                 writeInstruction(new Instruction(IPRINT));
             }
@@ -593,25 +600,21 @@ public class Analyser {
             }
         } else if (currentToken.getType() == IDENTIFIER) {
             identifier = currentToken;
+            Token function = identifier;
             getToken();
             if (currentToken.getType() == LEFT_BRACKET) {
-                if (functionTable.getSymbolByName(identifier.getValue().toString()) == null) {
+                if (functionTable.getSymbolByName(function.getValue().toString()) == null) {
                     throw new CompilationError(line, row, VARIABLE_OR_FUNCTION_UNDEFINED);
                 }
                 analyseFunctionCall();
             } else {
                 unreadToken();
-            }
-            if (functionTable.getSymbolByName(currentToken.getValue().toString()) != null) {
-                analyseFunctionCall();
-            } else {
-                Pair<Symbol, Integer> symbolPair = SymbolTableStack.getSymbolByName(currentToken.getValue().toString());
+                Pair<Symbol, Integer> symbolPair = SymbolTableStack.getSymbolByName(identifier.getValue().toString());
                 if (symbolPair == null) {
                     throw new CompilationError(line, row, VARIABLE_OR_FUNCTION_UNDEFINED);
-                } else {
-                    writeInstruction(new Instruction(LOADA, new Int16_and_Int32(symbolPair.getValue(), symbolPair.getKey().getIndex())));
-                    writeInstruction(new Instruction(ILOAD));
                 }
+                writeInstruction(new Instruction(LOADA, new Int16_and_Int32(symbolPair.getValue(), symbolPair.getKey().getIndex())));
+                writeInstruction(new Instruction(ILOAD));
             }
         } else if (currentToken.getType() == INTEGER) {
             writeInstruction(new Instruction(IPUSH, currentToken.getValue()));
@@ -621,16 +624,24 @@ public class Analyser {
     }
 
     private static void analyseFunctionCall() throws CompilationError {
-        analyseExpressionList();
+        Token function = identifier;
+        getToken();
+        if (currentToken.getType() != RIGHT_BRACKET) {
+            unreadToken();
+            analyseExpressionList();
+        } else {
+            unreadToken();
+        }
         getToken();
         if (currentToken.getType() != RIGHT_BRACKET) {
             throw new CompilationError(line, row, NO_RIGHT_BRACKET);
         }
-        Symbol functionCall = functionTable.getSymbolByName(identifier.getValue().toString());
+        Symbol functionCall = functionTable.getSymbolByName(function.getValue().toString());
         writeInstruction(new Instruction(CALL, functionCall.getIndex()));
     }
 
     private static void analyseExpressionList() {
+        Token function = identifier;
         int paramSize = 0;
         analyseExpression();
         paramSize++;
@@ -644,7 +655,7 @@ public class Analyser {
                 paramSize++;
             }
         }
-        if (paramSize != SymbolTableStack.getSymbolByName(identifier.getValue().toString()).getValue()) {
+        if (paramSize != (Integer) functionTable.getSymbolByName(function.getValue().toString()).getValue()) {
             throw new CompilationError(line, row, PARAMETER_SIZE_MISMATCH);
         }
     }
