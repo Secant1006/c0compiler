@@ -33,4 +33,12 @@ public class SymbolTable {
             return table.get(currentIndex - 1);
         }
     }
+
+    public int getSize() {
+        return table.size();
+    }
+
+    public ArrayList<Symbol> getTable() {
+        return table;
+    }
 }

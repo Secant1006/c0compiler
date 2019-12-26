@@ -19,7 +19,7 @@ import static com.secant.c0compiler.errorhandling.ErrorCode.*;
 import static com.secant.c0compiler.tokenizer.Tokenizer.*;
 
 public class Analyser {
-    private static SymbolTable functionTable = new SymbolTable();
+    public static SymbolTable functionTable = new SymbolTable();
 
     private static Token currentToken;
 
@@ -53,7 +53,7 @@ public class Analyser {
                 throw new CompilationError(line, row, NO_TYPE_SPECIFIER);
             }
         }
-        // 执行WriteOutput的完成方法
+        finishWriting();
     }
 
     private static void analyseConstVariableDeclaration() throws CompilationError {

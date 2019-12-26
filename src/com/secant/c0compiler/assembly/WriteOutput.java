@@ -1,6 +1,9 @@
 package com.secant.c0compiler.assembly;
 
+import com.secant.c0compiler.analyser.Analyser;
 import com.secant.c0compiler.errorhandling.CompilationError;
+import com.secant.c0compiler.symbols.Symbol;
+import com.secant.c0compiler.symbols.SymbolTable;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -11,6 +14,7 @@ import static com.secant.c0compiler.errorhandling.ErrorCode.*;
 
 public class WriteOutput {
     private static int mode;
+    private static boolean writeToStdio;
     private static RandomAccessFile writer;
     private static ArrayList<ArrayList<Instruction>> programList;
     private static ArrayList<Instruction> instructionList;
@@ -26,12 +30,12 @@ public class WriteOutput {
 
     public static void initializeWriter() throws CompilationError {
         mode = getMode();
+        writeToStdio = isWriteToStdio();
         try {
             if (!new File(getOutputFileName()).createNewFile()) {
                 throw new CompilationError(0, 0, FILE_WRITE_ERROR);
             }
             writer = new RandomAccessFile(getOutputFileName(), "rw");
-            writeHeader();
         } catch (Exception e) {
             throw new CompilationError(0, 0, FILE_WRITE_ERROR);
         }
@@ -42,13 +46,6 @@ public class WriteOutput {
             writer.close();
         } catch (IOException e) {
             throw new CompilationError(0, 0, FILE_WRITE_ERROR);
-        }
-    }
-
-    private static void writeHeader() throws IOException {
-        if (mode == 1) {
-            writer.writeInt(0x43303a29);
-            writer.writeInt(0x00000001);
         }
     }
 
@@ -74,7 +71,11 @@ public class WriteOutput {
                         (Integer) instruction.getOperand());
             }
             try {
-                writer.writeChars(str);
+                if (!writeToStdio) {
+                    writer.writeChars(str);
+                } else {
+                    System.out.print(str);
+                }
             } catch (IOException e) {
                 throw new CompilationError(0, 0, FILE_WRITE_ERROR);
             }
@@ -95,5 +96,103 @@ public class WriteOutput {
                 throw new CompilationError(0, 0, FILE_WRITE_ERROR);
             }
         }
+    }
+
+    public static void finishWriting() {
+        String str;
+        SymbolTable functionTable = Analyser.functionTable;
+        initializeWriter();
+        int index;
+        try {
+            // file header
+            if (mode == 1) {
+                writer.write(0x43303a29);
+                writer.write(0x00000001);
+            }
+            // constant table
+            if (mode == 1) {
+                writer.writeShort(functionTable.getSize());
+            } else {
+                str = ".constants:\n";
+                if (!writeToStdio) {
+                    writer.writeChars(str);
+                } else {
+                    System.out.print(str);
+                }
+            }
+            index = 0;
+            for (Symbol function : functionTable.getTable()) {
+                if (mode == 1) {
+                    writer.writeByte(0);
+                    writer.writeShort(function.getName().length());
+                    writer.writeChars(function.getName());
+                } else {
+                    str = String.format("%d S \"%s\"\n", index, function.getName());
+                    if (!writeToStdio) {
+                        writer.writeChars(str);
+                    } else {
+                        System.out.print(str);
+                    }
+                }
+                index++;
+            }
+            // start code
+            if (mode == 1) {
+                writer.writeShort(programList.get(0).size());
+            } else {
+                str = ".start:\n";
+                if (!writeToStdio) {
+                    writer.writeChars(str);
+                } else {
+                    System.out.print(str);
+                }
+            }
+            index = 0;
+            for (Instruction instruction : programList.get(0)) {
+                writeInstructionToFile(instruction, index);
+                index++;
+            }
+            programList.remove(0);
+            // function table
+            if (mode == 1) {
+                writer.writeShort(programList.size());
+            } else {
+                str = ".functions:\n";
+                if (!writeToStdio) {
+                    writer.writeChars(str);
+                } else {
+                    System.out.print(str);
+                }
+                index = 0;
+                for (Symbol function : functionTable.getTable()) {
+                    str = String.format("%d %d %d 1\n", index, index, (Integer) function.getValue());
+                    if (!writeToStdio) {
+                        writer.writeChars(str);
+                    } else {
+                        System.out.print(str);
+                    }
+                    index++;
+                }
+            }
+            // functions
+            index = 0;
+            for (Symbol function : functionTable.getTable()) {
+                if (mode == 1) {
+                    writer.writeShort(index);
+                    writer.writeShort((Integer) function.getValue());
+                    writer.writeShort(1);
+                    writer.writeShort(programList.get(index).size());
+                }
+                int instructionIndex = 0;
+                for (Instruction instruction : programList.get(index)) {
+                    writeInstructionToFile(instruction, instructionIndex);
+                    instructionIndex++;
+                }
+                index++;
+            }
+        } catch (IOException e) {
+            throw new CompilationError(0, 0, FILE_WRITE_ERROR);
+        }
+        closeWriter();
     }
 }
