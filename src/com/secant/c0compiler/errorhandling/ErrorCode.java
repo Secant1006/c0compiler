@@ -27,7 +27,8 @@ public enum ErrorCode {
     ASSIGN_TO_CONSTANT("Cannot assign value to constant."),
     NO_RETURN_VALUE("No return value for 'int' function."),
     ASSIGN_TO_NON_INTEGER("Don't assign value to non-integer. I didn't write extension!"),
-    ;
+    PARAMETER_SIZE_MISMATCH("Too many or too few arguments."),
+    INVALID_CONDITION("Condition is invalid.");
 
     private final String description;
 

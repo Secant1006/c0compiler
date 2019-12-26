@@ -12,18 +12,16 @@ import static com.secant.c0compiler.errorhandling.ErrorCode.*;
 public class WriteOutput {
     private static int mode;
     private static RandomAccessFile writer;
-    private static int currentIndex;
     private static ArrayList<ArrayList<Instruction>> programList;
     private static ArrayList<Instruction> instructionList;
 
     public static void addProgram() {
         instructionList = new ArrayList<>();
-        currentIndex = 0;
         programList.add(instructionList);
     }
 
     public static int getOffset() {
-        return currentIndex;
+        return instructionList.size();
     }
 
     public static void initializeWriter() throws CompilationError {
@@ -56,20 +54,23 @@ public class WriteOutput {
 
     public static void writeInstruction(Instruction instruction) {
         instructionList.add(instruction);
-        currentIndex++;
     }
 
-    public static void writeInstructionToFile(Instruction instruction) throws CompilationError {
+    public static void setInstruction(int index, Instruction instruction) {
+        instructionList.set(index, instruction);
+    }
+
+    public static void writeInstructionToFile(Instruction instruction, int index) throws CompilationError {
         if (mode == 0) {
             String str;
             if (instruction.getOpCode().getOperandType() == NULL) {
-                str = String.format("%d %s\n", currentIndex, instruction.getOpCode().getName());
+                str = String.format("%d %s\n", index, instruction.getOpCode().getName());
             } else if (instruction.getOpCode().getOperandType() == INT16_AND_INT32) {
-                str = String.format("%d %s %d, %d\n", currentIndex, instruction.getOpCode().getName(),
+                str = String.format("%d %s %d, %d\n", index, instruction.getOpCode().getName(),
                         ((Int16_and_Int32) instruction.getOperand()).op1,
                         ((Int16_and_Int32) instruction.getOperand()).op2);
             } else {
-                str = String.format("%d %s %d\n", currentIndex, instruction.getOpCode().getName(),
+                str = String.format("%d %s %d\n", index, instruction.getOpCode().getName(),
                         (Integer) instruction.getOperand());
             }
             try {

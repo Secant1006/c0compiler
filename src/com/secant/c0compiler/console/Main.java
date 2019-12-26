@@ -1,5 +1,9 @@
 package com.secant.c0compiler.console;
 
+import com.secant.c0compiler.errorhandling.CompilationError;
+
+import static com.secant.c0compiler.analyser.Analyser.analyse;
+
 public class Main {
     public static void main(String[] args) {
         switch (args.length) {
@@ -22,6 +26,8 @@ public class Main {
                     printInvalid();
                 }
                 Arguments.setInputFileName(args[1]);
+                Arguments.setWriteToStdio(true);
+                runCompilingProcess();
                 break;
             case 4:
                 if (args[0].equals("-s")) {
@@ -36,6 +42,7 @@ public class Main {
                     printInvalid();
                 }
                 Arguments.setOutputFileName(args[3]);
+                runCompilingProcess();
                 break;
             default:
                 printInvalid();
@@ -58,5 +65,17 @@ public class Main {
                 "  -c        Convert input source code to binary file\n" +
                 "  -h        Display help about usage of compiler\n" +
                 "  -o file   Output to specific file\n\n");
+    }
+
+    private static void runCompilingProcess() {
+        try {
+            analyse();
+        } catch (CompilationError e) {
+            if (e.getLine() == 0 && e.getRow() == 0) {
+                System.out.print("Error: " + e.getErrorCode().getErrorMessage() + "\n\n");
+            } else {
+                System.out.printf("Line %d, row %d: " + e.getErrorCode().getErrorMessage() + "\n\n", e.getLine(), e.getRow());
+            }
+        }
     }
 }
