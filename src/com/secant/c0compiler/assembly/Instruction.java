@@ -4,6 +4,11 @@ public class Instruction {
     private OPCode opCode;
     private Object operand;
 
+    public Instruction(OPCode opCode) {
+        this.opCode = opCode;
+        this.operand = 0;
+    }
+
     public Instruction(OPCode opCode, Object operand) {
         this.opCode = opCode;
         this.operand = operand;

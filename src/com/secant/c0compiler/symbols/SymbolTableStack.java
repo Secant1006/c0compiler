@@ -20,11 +20,11 @@ public class SymbolTableStack {
     public static Pair<Symbol, Integer> getSymbolByName(String name) {
         int diff_level = 0;
         for (SymbolTable table : stack) {
-            diff_level++;
             Symbol result = table.getSymbolByName(name);
             if (result != null) {
                 return new Pair<>(result, diff_level);
             }
+            diff_level++;
         }
         return null;
     }

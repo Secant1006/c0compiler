@@ -26,7 +26,11 @@ public class SymbolTable {
         currentIndex++;
     }
 
-    public int getCurrentIndex() {
-        return currentIndex;
+    public Symbol getLastSymbol() {
+        if (table.isEmpty()) {
+            return null;
+        } else {
+            return table.get(currentIndex - 1);
+        }
     }
 }

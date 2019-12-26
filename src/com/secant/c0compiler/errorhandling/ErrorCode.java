@@ -23,6 +23,10 @@ public enum ErrorCode {
     INVALID_VARIABLE_DEFINITION("Variable type cannot be 'void'."),
     VARIABLE_HAS_BEEN_DECLARED("Variable has been declared."),
     FUNCTION_HAS_BEEN_DEFINED("Function has been defined."),
+    VARIABLE_OR_FUNCTION_UNDEFINED("Variable or function is not defined."),
+    ASSIGN_TO_CONSTANT("Cannot assign value to constant."),
+    NO_RETURN_VALUE("No return value for 'int' function."),
+    ASSIGN_TO_NON_INTEGER("Don't assign value to non-integer. I didn't write extension!"),
     ;
 
     private final String description;

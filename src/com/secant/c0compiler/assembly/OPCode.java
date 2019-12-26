@@ -59,7 +59,7 @@ public enum OPCode {
     CPIRNT("CPRINT", 0xa2, NULL),
     SPRINT("SPRINT", 0xa3, NULL),
     PRINTL("PRINTL", 0xaf, NULL),
-    TSCAN("ISCAN", 0xb0, NULL),
+    ISCAN("ISCAN", 0xb0, NULL),
     DSCAN("DSCAN", 0xb1, NULL),
     CSCAN("CSCAN", 0xb2, NULL);
 

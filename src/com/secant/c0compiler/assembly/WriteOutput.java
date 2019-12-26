@@ -3,6 +3,7 @@ package com.secant.c0compiler.assembly;
 import com.secant.c0compiler.errorhandling.CompilationError;
 
 import java.io.*;
+import java.util.ArrayList;
 
 import static com.secant.c0compiler.assembly.OperandType.*;
 import static com.secant.c0compiler.console.Arguments.*;
@@ -12,7 +13,18 @@ public class WriteOutput {
     private static int mode;
     private static RandomAccessFile writer;
     private static int currentIndex;
-    private static int state;
+    private static ArrayList<ArrayList<Instruction>> programList;
+    private static ArrayList<Instruction> instructionList;
+
+    public static void addProgram() {
+        instructionList = new ArrayList<>();
+        currentIndex = 0;
+        programList.add(instructionList);
+    }
+
+    public static int getOffset() {
+        return currentIndex;
+    }
 
     public static void initializeWriter() throws CompilationError {
         mode = getMode();
@@ -42,11 +54,12 @@ public class WriteOutput {
         }
     }
 
-    private static void resetIndex() {
-        currentIndex = 0;
+    public static void writeInstruction(Instruction instruction) {
+        instructionList.add(instruction);
+        currentIndex++;
     }
 
-    public static void writeInstruction(Instruction instruction) throws CompilationError {
+    public static void writeInstructionToFile(Instruction instruction) throws CompilationError {
         if (mode == 0) {
             String str;
             if (instruction.getOpCode().getOperandType() == NULL) {
