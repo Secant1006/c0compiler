@@ -138,7 +138,45 @@ public class Tokenizer {
             return new Token(MULTIPLY, null);
         } else if (currentChar == '/') {
             row++;
-            return new Token(DIVIDE, null);
+            read();
+            if (currentChar == '/') {
+                row++;
+                while (true) {
+                    read();
+                    if (currentChar == '\0') {
+                        return new Token(COMMENT, null);
+                    } else if (currentChar != '\r' && currentChar != '\n') {
+                        row++;
+                    } else {
+                        line++;
+                        row = 1;
+                        return new Token(COMMENT, null);
+                    }
+                }
+            } else if (currentChar == '*') {
+                row++;
+                while (true) {
+                    read();
+                    row++;
+                    if (currentChar == '\0') {
+                        return new Token(COMMENT, null);
+                    } else if (currentChar == '\r' || currentChar == '\n') {
+                        line++;
+                        row = 1;
+                    } else if (currentChar == '*') {
+                        read();
+                        if (currentChar == '/') {
+                            row++;
+                            return new Token(COMMENT, null);
+                        } else {
+                            unread();
+                        }
+                    }
+                }
+            } else {
+                unread();
+                return new Token(DIVIDE, null);
+            }
         } else if (currentChar == '<') {
             row++;
             read();

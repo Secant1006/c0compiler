@@ -76,6 +76,8 @@ public class Main {
             } else {
                 System.out.printf("Line %d, row %d: " + e.getErrorCode().getErrorMessage() + "\n\n", e.getLine(), e.getRow());
             }
+        } catch (ExceptionInInitializerError e) {
+            System.out.print("Error: File read error.\n\n");
         }
     }
 }
