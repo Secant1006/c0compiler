@@ -402,6 +402,10 @@ public class Analyser {
             relation = Relation.CON_NOT_EQUAL;
         } else if (currentToken.getType() == EQUAL) {
             relation = Relation.CON_EQUAL;
+        } else if (currentToken.getType() == RIGHT_BRACKET) {
+            unreadToken();
+            writeInstruction(new Instruction(IPUSH, 1));
+            relation = Relation.CON_EQUAL;
         } else {
             throw new CompilationError(line, row, INVALID_CONDITION);
         }

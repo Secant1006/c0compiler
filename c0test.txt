@@ -9,7 +9,10 @@ int fun(int num){
         else
             while(num<3)
                 num=num+1;
-
+    /*
+    do you know what am i doing
+    i don't know either
+    */
     return b*b;
 }
 int main(){
