@@ -5,10 +5,10 @@ import com.secant.c0compiler.assembly.Int16_and_Int32;
 import com.secant.c0compiler.assembly.WriteOutput;
 import com.secant.c0compiler.errorhandling.CompilationError;
 import com.secant.c0compiler.symbols.Symbol;
+import com.secant.c0compiler.symbols.SymbolPair;
 import com.secant.c0compiler.symbols.SymbolTable;
 import com.secant.c0compiler.symbols.SymbolTableStack;
 import com.secant.c0compiler.tokenizer.Token;
-import javafx.util.Pair;
 
 import static com.secant.c0compiler.analyser.TokenBuffer.*;
 import static com.secant.c0compiler.assembly.OPCode.*;
@@ -303,7 +303,7 @@ public class Analyser {
             getToken();
             if (currentToken.getType() == ASSIGNMENT) {
                 try {
-                    Symbol id = SymbolTableStack.getSymbolByName(identifier.getValue().toString()).getKey();
+                    Symbol id = SymbolTableStack.getSymbolByName(identifier.getValue().toString()).getSymbol();
                     if (id.getType() == SYM_INTEGER) {
                         if (id.isConstant()) {
                             throw new CompilationError(line, row, ASSIGN_TO_CONSTANT);
@@ -479,12 +479,12 @@ public class Analyser {
         if (currentToken.getType() != IDENTIFIER) {
             throw new CompilationError(line, row, NO_IDENTIFIER);
         }
-        Pair<Symbol, Integer> symbolPair = SymbolTableStack.getSymbolByName(currentToken.getValue().toString());
+        SymbolPair symbolPair = SymbolTableStack.getSymbolByName(currentToken.getValue().toString());
         try {
-            if (symbolPair.getKey().isConstant()) {
+            if (symbolPair.getSymbol().isConstant()) {
                 throw new CompilationError(line, row, ASSIGN_TO_CONSTANT);
             } else {
-                writeInstruction(new Instruction(LOADA, new Int16_and_Int32(symbolPair.getValue(), symbolPair.getKey().getIndex())));
+                writeInstruction(new Instruction(LOADA, new Int16_and_Int32(symbolPair.getLevel_diff(), symbolPair.getSymbol().getIndex())));
                 writeInstruction(new Instruction(ISCAN));
                 writeInstruction(new Instruction(ISTORE));
             }
@@ -536,8 +536,8 @@ public class Analyser {
     }
 
     private static void analyseAssignmentExpression() throws CompilationError {
-        Pair<Symbol, Integer> symbolPair = SymbolTableStack.getSymbolByName(identifier.getValue().toString());
-        writeInstruction(new Instruction(LOADA, new Int16_and_Int32(symbolPair.getValue(), symbolPair.getKey().getIndex())));
+        SymbolPair symbolPair = SymbolTableStack.getSymbolByName(identifier.getValue().toString());
+        writeInstruction(new Instruction(LOADA, new Int16_and_Int32(symbolPair.getLevel_diff(), symbolPair.getSymbol().getIndex())));
         analyseExpression();
         writeInstruction(new Instruction(ISTORE));
     }
@@ -609,11 +609,11 @@ public class Analyser {
                 analyseFunctionCall();
             } else {
                 unreadToken();
-                Pair<Symbol, Integer> symbolPair = SymbolTableStack.getSymbolByName(identifier.getValue().toString());
+                SymbolPair symbolPair = SymbolTableStack.getSymbolByName(identifier.getValue().toString());
                 if (symbolPair == null) {
                     throw new CompilationError(line, row, VARIABLE_OR_FUNCTION_UNDEFINED);
                 }
-                writeInstruction(new Instruction(LOADA, new Int16_and_Int32(symbolPair.getValue(), symbolPair.getKey().getIndex())));
+                writeInstruction(new Instruction(LOADA, new Int16_and_Int32(symbolPair.getLevel_diff(), symbolPair.getSymbol().getIndex())));
                 writeInstruction(new Instruction(ILOAD));
             }
         } else if (currentToken.getType() == INTEGER) {

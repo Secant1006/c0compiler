@@ -1,7 +1,5 @@
 package com.secant.c0compiler.symbols;
 
-import javafx.util.Pair;
-
 import java.util.Stack;
 
 public class SymbolTableStack {
@@ -17,13 +15,13 @@ public class SymbolTableStack {
         stack.pop();
     }
 
-    public static Pair<Symbol, Integer> getSymbolByName(String name) {
+    public static SymbolPair getSymbolByName(String name) {
         int index = 0;
         for (SymbolTable table : stack) {
             Symbol result = table.getSymbolByName(name);
             if (result != null) {
                 int diff_level = stack.size() - index - 1;
-                return new Pair<>(result, diff_level);
+                return new SymbolPair(result, diff_level);
             }
             index++;
         }
