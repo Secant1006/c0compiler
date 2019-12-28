@@ -9,6 +9,7 @@ echo '    if [ "$4" != "" ]; then'>>./cc0
 echo '        java -jar cc0.jar -s $2>$4'>>./cc0
 echo '        cat $4'>>./cc0
 echo '    else'>>./cc0
+echo '        java -jar cc0.jar -s $2'>>./cc0
 echo '    fi'>>./cc0
 echo 'elif [ "$1" = "-c" ]; then'>>./cc0
 echo '    if [ "$4" != "" ]; then'>>./cc0
