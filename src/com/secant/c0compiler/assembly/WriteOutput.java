@@ -66,7 +66,7 @@ public class WriteOutput {
             }
             try {
                 if (!writeToStdio) {
-                    writer.writeChars(str);
+                    writer.writeUTF(str);
                 } else {
                     System.out.print(str);
                 }
@@ -100,8 +100,8 @@ public class WriteOutput {
         try {
             // file header
             if (mode == 1) {
-                writer.write(0x43303a29);
-                writer.write(0x00000001);
+                writer.write(new byte[]{0x43, 0x30, 0x3a, 0x29});
+                writer.write(new byte[]{0x00, 0x00, 0x00, 0x01});
             }
             // constant table
             if (mode == 1) {
@@ -109,7 +109,7 @@ public class WriteOutput {
             } else {
                 str = ".constants:\n";
                 if (!writeToStdio) {
-                    writer.writeChars(str);
+                    writer.writeUTF(str);
                 } else {
                     System.out.print(str);
                 }
@@ -119,11 +119,11 @@ public class WriteOutput {
                 if (mode == 1) {
                     writer.writeByte(0);
                     writer.writeShort(function.getName().length());
-                    writer.writeChars(function.getName());
+                    writer.writeUTF(function.getName());
                 } else {
                     str = String.format("%d S \"%s\"\n", index, function.getName());
                     if (!writeToStdio) {
-                        writer.writeChars(str);
+                        writer.writeUTF(str);
                     } else {
                         System.out.print(str);
                     }
@@ -136,7 +136,7 @@ public class WriteOutput {
             } else {
                 str = ".start:\n";
                 if (!writeToStdio) {
-                    writer.writeChars(str);
+                    writer.writeUTF(str);
                 } else {
                     System.out.print(str);
                 }
@@ -153,7 +153,7 @@ public class WriteOutput {
             } else {
                 str = ".functions:\n";
                 if (!writeToStdio) {
-                    writer.writeChars(str);
+                    writer.writeUTF(str);
                 } else {
                     System.out.print(str);
                 }
@@ -161,7 +161,7 @@ public class WriteOutput {
                 for (Symbol function : functionTable.getTable()) {
                     str = String.format("%d %d %d 1\n", index, index, (Integer) function.getValue());
                     if (!writeToStdio) {
-                        writer.writeChars(str);
+                        writer.writeUTF(str);
                     } else {
                         System.out.print(str);
                     }
@@ -179,7 +179,7 @@ public class WriteOutput {
                 } else {
                     str = String.format(".F%d:\n", index);
                     if (!writeToStdio) {
-                        writer.writeChars(str);
+                        writer.writeUTF(str);
                     } else {
                         System.out.print(str);
                     }
