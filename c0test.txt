@@ -1,20 +1,6 @@
-const int a=5*3;
-int b=a;
-int fun(int num){
-    b=a+num/5;
-    if(b==a)
-        if(num>10)
-            // fuck this shit
-            return num+b;
-        else
-            while(num<3)
-                num=num+1;
-    /*
-    do you know what am i doing
-    i don't know either
-    */
-    return b*b;
-}
-int main(){
-    return fun(20);
+int a=1;
+int b=2;
+void main(){
+    scan(a);
+    print(a+b);
 }
