@@ -405,7 +405,8 @@ public class Analyser {
         } else if (currentToken.getType() == RIGHT_BRACKET) {
             unreadToken();
             writeInstruction(new Instruction(IPUSH, 1));
-            relation = Relation.CON_EQUAL;
+            writeInstruction(new Instruction(ICMP));
+            return Relation.CON_EQUAL;
         } else {
             throw new CompilationError(line, row, INVALID_CONDITION);
         }
