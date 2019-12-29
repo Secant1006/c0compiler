@@ -3,6 +3,7 @@ mkdir out
 javac -cp ./src -d ./out ./src/com/secant/c0compiler/console/Main.java
 jar cfm cc0.jar ./meta-inf/manifest.mf -C ./out .
 rm -rf ./out
+chmod +x ./c0-vm-cpp
 echo '#!/bin/bash'>./cc0
 echo 'if [ "$1" = "-s" ]; then'>>./cc0
 echo '    if [ "$4" != "" ]; then'>>./cc0
