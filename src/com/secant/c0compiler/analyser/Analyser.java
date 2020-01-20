@@ -127,26 +127,28 @@ public class Analyser {
             analyseExpression();
         } else {
             writeInstruction(new Instruction(IPUSH, 0));
-            while (true) {
-                getToken();
-                if (currentToken.getType() != IDENTIFIER) {
-                    throw new CompilationError(line, row, NO_IDENTIFIER);
-                }
-                if (SymbolTableStack.getSymbolByName(identifier.getValue().toString()) != null) {
-                    throw new CompilationError(line, row, VARIABLE_HAS_BEEN_DECLARED);
-                }
-                SymbolTableStack.addSymbol(new Symbol(identifier.getValue().toString(), SYM_INTEGER, 0, isConstant));
-                getToken();
-                if (currentToken.getType() == ASSIGNMENT) {
-                    analyseExpression();
-                } else {
-                    writeInstruction(new Instruction(IPUSH, 0));
-                }
-                getToken();
-                if (currentToken.getType() != COMMA) {
-                    unreadToken();
-                    break;
-                }
+        }
+        while (true) {
+            getToken();
+            if (currentToken.getType() != COMMA) {
+                unreadToken();
+                break;
+            }
+            getToken();
+            if (currentToken.getType() != IDENTIFIER) {
+                throw new CompilationError(line, row, NO_IDENTIFIER);
+            }
+            identifier = currentToken;
+            if (SymbolTableStack.getSymbolByName(identifier.getValue().toString()) != null) {
+                throw new CompilationError(line, row, VARIABLE_HAS_BEEN_DECLARED);
+            }
+            SymbolTableStack.addSymbol(new Symbol(identifier.getValue().toString(), SYM_INTEGER, 0, isConstant));
+            getToken();
+            if (currentToken.getType() == ASSIGNMENT) {
+                analyseExpression();
+            } else {
+                unreadToken();
+                writeInstruction(new Instruction(IPUSH, 0));
             }
         }
         getToken();
@@ -245,7 +247,17 @@ public class Analyser {
                 if (currentToken.getType() == IDENTIFIER) {
                     identifier = currentToken;
                     getToken();
-                    analyseVariableDeclaration(isConstant);
+                    if (currentToken.getType() == ASSIGNMENT || currentToken.getType() == COMMA) {
+                        analyseVariableDeclaration(isConstant);
+                    } else if (currentToken.getType() == SEMICOLON) {
+                        if (SymbolTableStack.getSymbolByName(identifier.getValue().toString()) != null) {
+                            throw new CompilationError(line, row, VARIABLE_HAS_BEEN_DECLARED);
+                        }
+                        SymbolTableStack.addSymbol(new Symbol(identifier.getValue().toString(), SYM_INTEGER, 0, isConstant));
+                        writeInstruction(new Instruction(IPUSH, 0));
+                    } else {
+                        throw new CompilationError(line, row, NO_SEMICOLON);
+                    }
                 } else {
                     throw new CompilationError(line, row, NO_IDENTIFIER);
                 }
@@ -357,6 +369,9 @@ public class Analyser {
         writeInstruction(new Instruction(NOP));
         getToken();
         analyseStatement();
+        int offset2 = getOffset();
+        writeInstruction(new Instruction(NOP));
+        getToken();
         switch (relation) {
             case CON_LESS_THAN:
                 setInstruction(offset, new Instruction(JGE, getOffset()));
@@ -377,13 +392,13 @@ public class Analyser {
                 setInstruction(offset, new Instruction(JNE, getOffset()));
                 break;
         }
-        getToken();
         if (currentToken.getType() == RESERVED_WORD_ELSE) {
             getToken();
             analyseStatement();
         } else {
             unreadToken();
         }
+        setInstruction(offset2, new Instruction(JMP, getOffset()));
     }
 
     private static Relation analyseCondition() {
@@ -553,29 +568,35 @@ public class Analyser {
 
     private static void analyseAdditiveExpression() {
         analyseMultiplicativeExpression();
-        getToken();
-        if (currentToken.getType() == PLUS) {
-            analyseMultiplicativeExpression();
-            writeInstruction(new Instruction(IADD));
-        } else if (currentToken.getType() == MINUS) {
-            analyseMultiplicativeExpression();
-            writeInstruction(new Instruction(ISUB));
-        } else {
-            unreadToken();
+        while (true) {
+            getToken();
+            if (currentToken.getType() == PLUS) {
+                analyseMultiplicativeExpression();
+                writeInstruction(new Instruction(IADD));
+            } else if (currentToken.getType() == MINUS) {
+                analyseMultiplicativeExpression();
+                writeInstruction(new Instruction(ISUB));
+            } else {
+                unreadToken();
+                break;
+            }
         }
     }
 
     private static void analyseMultiplicativeExpression() {
         analyseUnaryExpression();
-        getToken();
-        if (currentToken.getType() == MULTIPLY) {
-            analyseUnaryExpression();
-            writeInstruction(new Instruction(IMUL));
-        } else if (currentToken.getType() == DIVIDE) {
-            analyseUnaryExpression();
-            writeInstruction(new Instruction(IDIV));
-        } else {
-            unreadToken();
+        while (true) {
+            getToken();
+            if (currentToken.getType() == MULTIPLY) {
+                analyseUnaryExpression();
+                writeInstruction(new Instruction(IMUL));
+            } else if (currentToken.getType() == DIVIDE) {
+                analyseUnaryExpression();
+                writeInstruction(new Instruction(IDIV));
+            } else {
+                unreadToken();
+                break;
+            }
         }
     }
 
@@ -610,6 +631,9 @@ public class Analyser {
             if (currentToken.getType() == LEFT_BRACKET) {
                 if (functionTable.getSymbolByName(function.getValue().toString()) == null) {
                     throw new CompilationError(line, row, VARIABLE_OR_FUNCTION_UNDEFINED);
+                }
+                if (functionTable.getSymbolByName(function.getValue().toString()).getType() == SYM_FUNCTION_VOID) {
+                    throw new CompilationError(line, row, ASSIGN_WITH_VOID);
                 }
                 analyseFunctionCall();
             } else {

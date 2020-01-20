@@ -16,16 +16,25 @@ public class SymbolTableStack {
     }
 
     public static SymbolPair getSymbolByName(String name) {
-        int index = 0;
-        for (SymbolTable table : stack) {
-            Symbol result = table.getSymbolByName(name);
+        Symbol result = stack.peek().getSymbolByName(name);
+        if (stack.size() == 0) {
             if (result != null) {
-                int diff_level = stack.size() - index - 1;
-                return new SymbolPair(result, diff_level);
+                return new SymbolPair(result, 0);
+            } else {
+                return null;
             }
-            index++;
+        } else {
+            if (result != null) {
+                return new SymbolPair(result, 0);
+            } else {
+                result = stack.get(0).getSymbolByName(name);
+                if (result != null) {
+                    return new SymbolPair(result, 1);
+                } else {
+                    return null;
+                }
+            }
         }
-        return null;
     }
 
     public static void addSymbol(Symbol symbol) {

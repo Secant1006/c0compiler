@@ -28,7 +28,8 @@ public enum ErrorCode {
     NO_RETURN_VALUE("No return value for 'int' function."),
     ASSIGN_TO_NON_INTEGER("Don't assign value to non-integer. I didn't write extension!"),
     PARAMETER_SIZE_MISMATCH("Too many or too few arguments."),
-    INVALID_CONDITION("Condition is invalid.");
+    INVALID_CONDITION("Condition is invalid."),
+    ASSIGN_WITH_VOID("Can't assign void value to variable.");
 
     private final String description;
 
